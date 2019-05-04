@@ -2,21 +2,30 @@ package com.reactnativecommunity.webview;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DownloadManager;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.text.InputType;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.webkit.ConsoleMessage;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
+import android.widget.EditText;
 import android.webkit.GeolocationPermissions;
+import android.webkit.HttpAuthHandler;
 import android.webkit.JavascriptInterface;
+import android.widget.LinearLayout;
 import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -24,6 +33,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.LifecycleEventListener;
@@ -558,9 +568,14 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
 
   protected static class RNCWebViewClient extends WebViewClient {
 
+    protected Activity mCurrentActivity;
     protected boolean mLastLoadFailed = false;
     protected @Nullable
     ReadableArray mUrlPrefixesForDefaultIntent;
+
+    public void setCurrentActivity(Activity mCurrentActivity) {
+      this.mCurrentActivity = mCurrentActivity;
+    }
 
     @Override
     public void onPageFinished(WebView webView, String url) {
@@ -627,6 +642,50 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         new TopLoadingErrorEvent(webView.getId(), eventData));
     }
 
+    @Override
+    public void onReceivedHttpAuthRequest(WebView view,
+                                          final HttpAuthHandler handler, String host, String realm)
+    {
+      Log.d("ReactNative", "host = " + host + " realm = " + realm);
+      if (this.mCurrentActivity != null) {
+        final EditText usernameInput = new EditText(this.mCurrentActivity);
+        usernameInput.setHint("Username");
+
+        final EditText passwordInput = new EditText(this.mCurrentActivity);
+        passwordInput.setHint("Password");
+        passwordInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+
+        LinearLayout layout = new LinearLayout(this.mCurrentActivity);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.addView(usernameInput);
+        layout.addView(passwordInput);
+
+        AlertDialog.Builder authDialog = new AlertDialog.Builder(this.mCurrentActivity)
+          .setTitle("Authentication Challenge")
+          .setMessage(host + " requires user name and password ")
+          .setView(layout)
+          .setCancelable(false)
+          .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialogInterface, int i) {
+              handler.proceed(usernameInput.getText().toString(), passwordInput.getText().toString());
+              dialogInterface.dismiss();
+            }
+          })
+          .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialogInterface, int i) {
+              dialogInterface.dismiss();
+              handler.cancel();
+            }
+          });
+
+        if (view != null) {
+          authDialog.show();
+        }
+      } else {
+        handler.cancel();
+      }
+    }
+
     protected void emitFinishEvent(WebView webView, String url) {
       dispatchEvent(
         webView,
@@ -664,6 +723,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
     protected @Nullable
     RNCWebViewClient mRNCWebViewClient;
     protected boolean sendContentSizeChangeEvents = false;
+    protected ReactContext reactContext;
 
     /**
      * WebView must be created with an context of the current activity
@@ -673,6 +733,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
      */
     public RNCWebView(ThemedReactContext reactContext) {
       super(reactContext);
+      this.reactContext = reactContext;
     }
 
     public void setSendContentSizeChangeEvents(boolean sendContentSizeChangeEvents) {
@@ -713,7 +774,11 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
     @Override
     public void setWebViewClient(WebViewClient client) {
       super.setWebViewClient(client);
-      mRNCWebViewClient = (RNCWebViewClient) client;
+      Log.d("ReactNative", "SETTING THE WEBVIEW CLIENT");
+      mRNCWebViewClient = (RNCWebViewClient)client;
+      if (this.reactContext != null && this.reactContext.getCurrentActivity() != null && mRNCWebViewClient != null) {
+        mRNCWebViewClient.setCurrentActivity(this.reactContext.getCurrentActivity());
+      }
     }
 
     public @Nullable

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#import "RNCWKWebView.h"
+#import "RNCWebView.h"
 #import <React/RCTConvert.h>
 #import <React/RCTAutoInsetsProtocol.h>
 #import "RNCWKProcessPoolManager.h"
@@ -27,7 +27,7 @@ static NSURLCredential* clientAuthenticationCredential;
 }
 @end
 
-@interface RNCWKWebView () <WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIScrollViewDelegate, RCTAutoInsetsProtocol>
+@interface RNCWebView () <WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler, UIScrollViewDelegate, RCTAutoInsetsProtocol>
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingStart;
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingFinish;
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingError;
@@ -37,7 +37,7 @@ static NSURLCredential* clientAuthenticationCredential;
 @property (nonatomic, copy) WKWebView *webView;
 @end
 
-@implementation RNCWKWebView
+@implementation RNCWebView
 {
   UIColor * _savedBackgroundColor;
   BOOL _savedHideKeyboardAccessoryView;
@@ -543,7 +543,7 @@ static NSURLCredential* clientAuthenticationCredential;
 {
   [super layoutSubviews];
 
-  // Ensure webview takes the position and dimensions of RNCWKWebView
+  // Ensure webview takes the position and dimensions of RNCWebView
   _webView.frame = self.bounds;
 }
 

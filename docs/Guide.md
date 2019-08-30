@@ -257,7 +257,7 @@ This runs the JavaScript in the `runFirst` string once the page is loaded. In th
 
 *Under the hood*
 
-> On iOS, `injectedJavaScript` runs a method on WKWebView called `evaluateJavaScript:completionHandler:`
+> On iOS, `injectedJavaScript` runs a method on WebView called `evaluateJavaScript:completionHandler:`
 > On Android, `injectedJavaScript` runs a method on the Android WebView called `evaluateJavascriptWithFallback`
 
 #### The `injectJavaScript` method
@@ -301,7 +301,7 @@ After 3 seconds, this code turns the background blue:
 
 *Under the hood*
 
-> On iOS, `injectJavaScript` calls WKWebView's `evaluateJS:andThen:`
+> On iOS, `injectJavaScript` calls WebView's `evaluateJS:andThen:`
 > On Android, `injectJavaScript` calls Android WebView's `evaluateJavascriptWithFallback` method
 
 #### The `window.ReactNativeWebView.postMessage` method and `onMessage` prop

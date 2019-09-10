@@ -9,6 +9,7 @@ declare class WebView extends React.Component<AndroidWebViewProps, State> {
         javaScriptEnabled: boolean;
         thirdPartyCookiesEnabled: boolean;
         scalesPageToFit: boolean;
+        allowsFullscreenVideo: boolean;
         allowFileAccess: boolean;
         saveFormDataDisabled: boolean;
         cacheEnabled: boolean;
@@ -23,6 +24,7 @@ declare class WebView extends React.Component<AndroidWebViewProps, State> {
     goBack: () => void;
     reload: () => void;
     stopLoading: () => void;
+    requestFocus: () => void;
     postMessage: (data: string) => void;
     /**
      * Injects a javascript string into the referenced WebView. Deliberately does not

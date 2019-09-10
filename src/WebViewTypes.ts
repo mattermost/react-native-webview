@@ -7,6 +7,7 @@ import {
   NativeMethodsMixin,
   Constructor,
   UIManagerStatic,
+  NativeScrollEvent,
 } from 'react-native';
 
 export interface WebViewCommands {
@@ -17,6 +18,7 @@ export interface WebViewCommands {
   postMessage: Function;
   injectJavaScript: Function;
   loadUrl: Function;
+  requestFocus: Function;
 }
 
 export interface CustomUIManager extends UIManagerStatic {
@@ -97,6 +99,7 @@ export interface WebViewNavigation extends WebViewNativeEvent {
     | 'reload'
     | 'formresubmit'
     | 'other';
+  mainDocumentURL?: string;
 }
 
 export type DecelerationRateConstant = 'normal' | 'fast';
@@ -206,9 +209,11 @@ export type OnShouldStartLoadWithRequest = (
 
 export interface CommonNativeWebViewProps extends ViewProps {
   cacheEnabled?: boolean;
+  incognito?: boolean;
   injectedJavaScript?: string;
   mediaPlaybackRequiresUserAction?: boolean;
   messagingEnabled: boolean;
+  onScroll?: (event: NativeScrollEvent) => void;
   onLoadingError: (event: WebViewErrorEvent) => void;
   onLoadingFinish: (event: WebViewNavigationEvent) => void;
   onLoadingProgress: (event: WebViewProgressEvent) => void;
@@ -221,6 +226,10 @@ export interface CommonNativeWebViewProps extends ViewProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   source: any;
   userAgent?: string;
+  /**
+   * Append to the existing user-agent. Overriden if `userAgent` is set.
+   */
+  applicationNameForUserAgent?: string;
 }
 
 export interface AndroidNativeWebViewProps extends CommonNativeWebViewProps {
@@ -241,6 +250,7 @@ export interface AndroidNativeWebViewProps extends CommonNativeWebViewProps {
 }
 
 export interface IOSNativeWebViewProps extends CommonNativeWebViewProps {
+  allowingReadAccessToURL?: string;
   allowsBackForwardNavigationGestures?: boolean;
   allowsInlineMediaPlayback?: boolean;
   allowsLinkPreview?: boolean;
@@ -256,7 +266,6 @@ export interface IOSNativeWebViewProps extends CommonNativeWebViewProps {
   decelerationRate?: number;
   directionalLockEnabled?: boolean;
   hideKeyboardAccessoryView?: boolean;
-  incognito?: boolean;
   pagingEnabled?: boolean;
   scrollEnabled?: boolean;
   useSharedProcessPool?: boolean;
@@ -380,6 +389,7 @@ export interface IOSWebViewProps extends WebViewSharedProps {
    * @platform ios
    */
   useSharedProcessPool?: boolean;
+
   /**
    * The custom user agent string.
    */
@@ -493,13 +503,6 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
   urlPrefixesForDefaultIntent?: ReadonlyArray<string>;
 
   /**
-   * Boolean value to enable JavaScript in the `WebView`. Used on Android only
-   * as JavaScript is enabled by default on iOS. The default value is `true`.
-   * @platform android
-   */
-  javaScriptEnabled?: boolean;
-
-  /**
    * Boolean value to disable Hardware Acceleration in the `WebView`. Used on Android only
    * as Hardware Acceleration is a feature only for Android. The default value is `false`.
    * @platform android
@@ -577,6 +580,11 @@ export interface WebViewSharedProps extends ViewProps {
    * Function that returns a loading indicator.
    */
   renderLoading?: () => ReactElement;
+
+  /**
+   * Function that is invoked when the `WebView` scrolls.
+   */
+  onScroll?: (event: NativeScrollEvent) => void;
 
   /**
    * Function that is invoked when the `WebView` has finished loading.
